@@ -39,19 +39,15 @@ This repo contains two small scripts:
 Install:
 
 ```bash
+pip install -r requirements.txt
+```
+
+or
+
+
+```bash
 pip install pyautogui numpy opencv-python mss
 ```
-
-(Optional) Create a `requirements.txt`:
-
-```txt
-pyautogui
-numpy
-opencv-python
-mss
-```
-
----
 
 ## Quickstart
 
@@ -160,7 +156,7 @@ Then set `config.json -> monitor.index` accordingly.
 
 ---
 
-## How detection works (high-level)
+## How detection works
 
 For each saved point:
 
