@@ -1,0 +1,36 @@
+{
+  "monitor": {
+    "index": 1,
+    "comment": "Monitor index in mss: 1 = primary, 2 = secondary, etc.",
+    "width": 1920, 
+    "height": 1080
+  },
+  "debug": {
+    "show_window": true,
+    "window_monitor_index": 2,
+    "show_scores": true,
+    "comment": "show_window: shows a debug window with detections (great to check if the points are aligned), window_monitor_index: where to open the window (if there is a second monitor)"
+  },
+  "detection": {
+    "scan_interval": 0.05,
+    "color_box": 70,
+    "color_tol": 18,
+    "color_min_count": 6,
+    "color_min_sep": 6,
+    "color_ratio_min": 0.2,
+    "color_ratio_max": 5.0,
+    "color_1": [255, 252, 255],
+    "color_2": [74, 203, 242],
+    "comment": "color_1 and color_2 are in RGB | scan_interval: time between scans in seconds | color_box: size of the box to sample color | color_tol: color tolerance for detection | color_min_count: minimum number of pixels within tolerance to consider a detection | color_min_sep: minimum separation between detected points | color_ratio_min and color_ratio_max: min and max ratio of color1 to color2 pixels to consider a detection"
+  },
+  "click": {
+    "trigger_key": "P",
+    "delay": 0.05,
+    "jitter": 0.03,
+    "comment": "delay: base in seconds, jitter: random +/- in seconds"
+  },
+  "files": {
+    "points_file": "points.json",
+    "comment": "File containing the detection points"
+  }
+}
