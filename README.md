@@ -1,27 +1,41 @@
-# Auto Snow Loop (Windows) — ROI + Template Click Automation
+![heartopia-winter-snow-sculture-autocliker](https://socialify.git.ci/LucasHenriqueDiniz/heartopia-winter-snow-sculture-autocliker/image?language=1&name=1&owner=1&pattern=Circuit+Board&theme=Light)
 
-This repo contains two scripts:
+# Auto Snow Loop (Windows) — Template Click + ROI Routine
 
-1) **`capture_points.py`** — fast point-capture tool to record the center of UI slots and generate `points.json` (LEFT side only + mirrored RIGHT side).
-2) **`auto_snow_loop.py`** — main automation script. Detects UI icons (template matching) + runs a color ROI routine over the recorded points.
+Two scripts, zero fluff:
+
+1) **`capture_points.py`** — capture the center points of the LEFT-side slots and auto-generate RIGHT-side points (mirrored). Writes `points.json` + `points_preview.png`.
+2) **`auto_snow_loop.py`** — main automation loop:
+   - finds UI buttons via **template matching** (PNG icons in `images/`)
+   - runs a **color ROI routine** over captured points during the **P_RUN** phase
+   - clicks through a small state machine (“cascade”) repeatedly
 
 > ⚠️ Disclaimer: Use responsibly. Provided as-is.  
 > Windows is required due to DPI handling and `SendInput` (mouse injection).
 
 ---
 
-## Demo
+## Demo (videos)
 
-### Point capture (20s window)
-- Video: `media/save_points.mp4`
+GitHub READMEs don’t reliably render MP4 inline like images, so the usual pattern is:
+- show a **thumbnail image**
+- clicking it opens the **.mp4**
 
-### Running automation
-- Video: `media/running.mp4`
+### 1) Tutorial — how to capture points
+[![Capture points tutorial](media/preview_example.png)](media/save_points.mp4)  
+Direct link: `media/save_points.mp4`
 
-### Preview example
-- Image: `media/preview_example.png`
+### 2) Running — automation loop in action
+[![Running demo](media/preview_example.png)](media/running.mp4)  
+Direct link: `media/running.mp4`
 
-> Tip: You can also add a banner at the top: `media/banner.png` (optional).
+### 3) Preview example (what the points overlay looks like)
+![Points preview example](media/preview_example.png)
+
+> Tip: If you want different thumbnails for each video, add:
+> - `media/save_points_thumb.png`
+> - `media/running_thumb.png`
+> …and replace the `preview_example.png` above.
 
 ---
 
@@ -32,8 +46,6 @@ This repo contains two scripts:
 ├─ auto_snow_loop.py
 ├─ capture_points.py
 ├─ config.json
-├─ points.json                  # generated
-├─ points-1920x1080.json        # optional fallback
 ├─ images/
 │  ├─ put-snow.png
 │  ├─ start-snow.png
@@ -43,6 +55,11 @@ This repo contains two scripts:
    ├─ running.mp4
    └─ preview_example.png
 ```
+
+Generated at runtime (not required in git):
+- `points.json`
+- `points_preview.png`
+- optionally `points-1920x1080.json` or `points-<WxH>.json`
 
 ---
 
@@ -55,20 +72,13 @@ This repo contains two scripts:
   - `opencv-python`
   - `mss`
 
-Optional (only if your `capture_points.py` uses it):
-- `pyautogui`
-
 Install:
 
 ```bash
-pip install -r requirements.txt
+pip install numpy opencv-python mss
 ```
 
-or:
-
-```bash
-pip install numpy opencv-python mss pyautogui
-```
+(or keep a `requirements.txt` if you prefer)
 
 ---
 
@@ -77,10 +87,9 @@ pip install numpy opencv-python mss pyautogui
 ### 1) Configure `config.json`
 
 Minimum fields:
-
-- `monitor.index` — MSS monitor index (usually `1` for primary).
-- `files.points_file` — path to `points.json` (default: `points.json`)
-- `files.images_dir` — folder containing icon templates (default: `images`)
+- `monitor.index` — MSS monitor index (usually `1` for primary)
+- `files.points_file` — defaults to `points.json`
+- `files.images_dir` — defaults to `images`
 
 Example:
 
@@ -126,11 +135,11 @@ Example:
 }
 ```
 
-> **Important:** `config.json` must be valid JSON (no trailing commas).
+> **Important:** JSON does not allow trailing commas.
 
 ---
 
-### 2) Capture points (for your resolution)
+### 2) Capture points (your resolution)
 
 Run:
 
@@ -138,20 +147,19 @@ Run:
 python capture_points.py
 ```
 
-How it works:
-
+Workflow:
 - Press the **Start** hotkey.
-- You have **~20 seconds** to capture points (LEFT side only).
-- The script will automatically mirror them to generate RIGHT-side points.
-- At the end it writes:
+- You have ~20 seconds to capture points (LEFT side only).
+- The script mirrors them into RIGHT side points automatically.
+- It writes:
   - `points.json`
-  - `points_preview.png` (screenshot + numbered markers for quick verification)
+  - `points_preview.png` (a frozen screenshot with numbered markers)
 
-> If you change monitor, resolution, or Windows scaling, you must re-capture points.
+If you change monitor / resolution / Windows scaling, re-capture points.
 
 ---
 
-### 3) Run the automation
+### 3) Run automation
 
 Run:
 
@@ -160,23 +168,48 @@ python auto_snow_loop.py
 ```
 
 Controls:
-
-- **F7** → start the loop
+- **F7** → start
 - **F8** → stop/cancel (returns to idle)
-- **q** → exit (only if `debug.show_window: true`)
-- If `debug.show_window: false`, exit with **Ctrl+C**
+- **q** → quit (only when `debug.show_window: true`)
+- If window is disabled, quit with **Ctrl+C**
 
 ---
 
-## Points fallback behavior
+## Cascades (state machine)
+
+The loop is a simple cascade of states:
+
+1) **PUT** → click `put-snow.png`
+2) **START** → click `start-snow.png`
+3) **P_RUN** → run ROI routine for ~`p_duration_seconds`
+4) **COLLECT** → click `collect-sculture.png`
+5) **CENTER** → click the center of the monitor
+6) repeat
+
+Timeout behavior:
+- If the script stays **> `state_timeout_seconds`** in any state except `P_RUN`, it **skips to the next state**.
+- Cancel key stops immediately (even during `P_RUN`).
+
+```mermaid
+flowchart LR
+  PUT --> START --> P_RUN --> COLLECT --> CENTER --> PUT
+  PUT -. timeout .-> START
+  START -. timeout .-> P_RUN
+  COLLECT -. timeout .-> CENTER
+  CENTER -. timeout .-> PUT
+```
+
+---
+
+## Points fallback behavior (important)
 
 `auto_snow_loop.py` tries points in this order:
 
 1. `config.json -> files.points_file` (default: `points.json`)
-2. `points-<WIDTH>x<HEIGHT>.json` (example: `points-1920x1080.json`)
-3. If current resolution is **1920x1080** only: `points-1920x1080.json`
+2. `points-<WIDTH>x<HEIGHT>.json` (example: `points-2560x1440.json`)
+3. **Only if current resolution is 1920x1080**: `points-1920x1080.json`
 
-If none exists (or the file is invalid), the script will print an error telling you to record points and to check this README.
+If none exists (or the file is invalid), it exits with a message telling you to record points and check this README.
 
 ---
 
@@ -185,8 +218,8 @@ If none exists (or the file is invalid), the script will print an error telling 
 MSS exposes monitors like:
 
 - `monitors[0]` = full virtual desktop
-- `monitors[1]` = primary
-- `monitors[2]` = secondary
+- `monitors[1]` = primary monitor
+- `monitors[2]` = secondary monitor
 - ...
 
 Print them:
@@ -199,26 +232,33 @@ Then set `config.json -> monitor.index`.
 
 ---
 
-## Troubleshooting
+## FAQ / Troubleshooting
 
-### Coordinates don’t match (DPI / scaling)
-Windows scaling (125%, 150%, etc.) can desync screen coordinates.
-This repo calls `SetProcessDPIAware()`, but if you still see drift:
+### Why MP4 doesn’t show inline in README?
+GitHub sanitizes/limits HTML in Markdown and MP4 embedding is inconsistent.
+Use a clickable thumbnail instead:
+```md
+[![title](media/thumb.png)](media/video.mp4)
+```
 
+### My clicks are slightly off (DPI / scaling)
 - Set Windows Display Scale to **100%**
-- Ensure the game/app is on the same monitor configured in `monitor.index`
-- Re-capture `points.json`
+- Make sure the app is on the correct monitor (`monitor.index`)
+- Re-capture points after any scaling/resolution change
+
+### Template matching clicks the wrong place
+Common causes:
+- The icon is mostly flat/white (it matches huge bright regions)
+- The template PNG has too much transparent padding
+
+Fixes:
+- Add a **dark background** behind the UI buttons (best fix)
+- Crop templates tighter (remove empty margins)
+- Raise thresholds (`thr_put`, `thr_start`, `thr_collect`) if you expose them in config
 
 ### `q` doesn’t quit
-`q` uses `cv2.waitKey()` and only works if the debug window is enabled (`debug.show_window: true`).
-If disabled, exit with **Ctrl+C**.
-
-### Templates matching wrong place
-If the icon has a lot of white/flat regions, template matching can lock onto large bright areas.
-Fixes that help:
-- Add a **dark background** behind the button/icon (recommended)
-- Use higher thresholds (`automation.thr_put`, `thr_start`, `thr_collect`) if configured
-- Ensure templates are cropped tightly (no extra transparent margin)
+`q` is only handled when the debug window is open (`debug.show_window: true`).
+Otherwise: use **Ctrl+C**.
 
 ---
 
