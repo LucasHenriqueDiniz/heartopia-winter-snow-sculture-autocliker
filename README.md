@@ -1,28 +1,48 @@
-# Color ROI Detector + Clicker (Windows)
+# Auto Snow Loop (Windows) — ROI + Template Click Automation
 
-This repo contains two small scripts:
+This repo contains two scripts:
 
-1) **`capture_points.py`** — interactive tool to capture the center of UI “squares” and save them into `points.json`.
-2) **`detect_and_click.py`** — **main script**. Captures the screen, checks small ROIs around each saved point, and **clicks all matches when you press `P`**.
+1) **`capture_points.py`** — fast point-capture tool to record the center of UI slots and generate `points.json` (LEFT side only + mirrored RIGHT side).
+2) **`auto_snow_loop.py`** — main automation script. Detects UI icons (template matching) + runs a color ROI routine over the recorded points.
 
 > ⚠️ Disclaimer: Use responsibly. Provided as-is.  
 > Windows is required due to DPI handling and `SendInput` (mouse injection).
 
 ---
 
-## Files
+## Demo
 
-- **`detect_and_click.py`** (main)  
-  Screen capture + color detection + debug overlay + click on keypress.
+### Point capture (20s window)
+- Video: `media/save_points.mp4`
 
-- **`capture_points.py`**  
-  Captures **LEFT-side** points only; generates RIGHT-side points by mirroring (so you don’t need to manually capture both sides).
+### Running automation
+- Video: `media/running.mp4`
 
-- **`config.json`**  
-  Monitor selection, debug options, detection thresholds, click settings, and the `points.json` path.
+### Preview example
+- Image: `media/preview_example.png`
 
-- **`points.json`**  
-  Saved points (`left_points` + generated `right_points`).
+> Tip: You can also add a banner at the top: `media/banner.png` (optional).
+
+---
+
+## Repo layout
+
+```
+.
+├─ auto_snow_loop.py
+├─ capture_points.py
+├─ config.json
+├─ points.json                  # generated
+├─ points-1920x1080.json        # optional fallback
+├─ images/
+│  ├─ put-snow.png
+│  ├─ start-snow.png
+│  └─ collect-sculture.png
+└─ media/
+   ├─ save_points.mp4
+   ├─ running.mp4
+   └─ preview_example.png
+```
 
 ---
 
@@ -34,7 +54,9 @@ This repo contains two small scripts:
   - `numpy`
   - `opencv-python`
   - `mss`
-  - `pyautogui`
+
+Optional (only if your `capture_points.py` uses it):
+- `pyautogui`
 
 Install:
 
@@ -42,33 +64,32 @@ Install:
 pip install -r requirements.txt
 ```
 
-or
-
+or:
 
 ```bash
-pip install pyautogui numpy opencv-python mss
+pip install numpy opencv-python mss pyautogui
 ```
+
+---
 
 ## Quickstart
 
 ### 1) Configure `config.json`
 
-Minimum:
+Minimum fields:
 
-- `monitor.index` — monitor index used by MSS (usually `1` for primary).
-- `files.points_file` — path to `points.json` (default is `points.json`).
+- `monitor.index` — MSS monitor index (usually `1` for primary).
+- `files.points_file` — path to `points.json` (default: `points.json`)
+- `files.images_dir` — folder containing icon templates (default: `images`)
 
-**Important:** `config.json` must be valid JSON (no trailing commas).
-
-Example (valid JSON):
+Example:
 
 ```json
 {
   "monitor": {
     "index": 1,
     "width": 1920,
-    "height": 1080,
-    "comment": "index: 1 = primary monitor in MSS. width/height are used by capture_points.py to mirror points."
+    "height": 1080
   },
   "debug": {
     "show_window": true,
@@ -87,17 +108,29 @@ Example (valid JSON):
     "color_2": [74, 203, 242]
   },
   "click": {
-    "trigger_key": "P",
-    "delay": 0.05,
-    "jitter": 0.03
+    "delay": 0.03,
+    "jitter": 0.0
   },
   "files": {
-    "points_file": "points.json"
+    "points_file": "points.json",
+    "images_dir": "images"
+  },
+  "automation": {
+    "start_key": "F7",
+    "cancel_key": "F8",
+    "state_pause_range": [1.0, 1.5],
+    "p_interval_range": [0.9, 1.3],
+    "p_duration_seconds": 19.5,
+    "state_timeout_seconds": 5.0
   }
 }
 ```
 
-### 2) Capture points
+> **Important:** `config.json` must be valid JSON (no trailing commas).
+
+---
+
+### 2) Capture points (for your resolution)
 
 Run:
 
@@ -105,89 +138,87 @@ Run:
 python capture_points.py
 ```
 
-How to capture correctly:
+How it works:
 
-- You will capture **10 points on the LEFT side** (top-left square first).
-- For each capture:
-  1. Move the mouse to the **center** of the current square
-  2. Focus the terminal window (so ENTER goes to the script)
-  3. Press **ENTER** to capture
-  4. Move to the next square and repeat
-- After 10 captures, the script mirrors them into `right_points` and writes `points.json`.
+- Press the **Start** hotkey.
+- You have **~20 seconds** to capture points (LEFT side only).
+- The script will automatically mirror them to generate RIGHT-side points.
+- At the end it writes:
+  - `points.json`
+  - `points_preview.png` (screenshot + numbered markers for quick verification)
 
-Output:
+> If you change monitor, resolution, or Windows scaling, you must re-capture points.
 
-- `points.json` containing:
-  - `left_points`: captured points
-  - `right_points`: auto-generated mirrored points
+---
 
-### 3) Run the main detector/clicker
+### 3) Run the automation
 
 Run:
 
 ```bash
-python detect_and_click.py
+python auto_snow_loop.py
 ```
 
 Controls:
 
-- Press **`P`** → clicks every point that matches **in the current scan/frame**
-- Press **`q`** → exits (only works when `debug.show_window: true`)
-- If you run without a window (`debug.show_window: false`), exit with **Ctrl+C**
+- **F7** → start the loop
+- **F8** → stop/cancel (returns to idle)
+- **q** → exit (only if `debug.show_window: true`)
+- If `debug.show_window: false`, exit with **Ctrl+C**
 
 ---
 
-## Monitor index (MSS) explained
+## Points fallback behavior
 
-MSS exposes monitors like this:
+`auto_snow_loop.py` tries points in this order:
 
-- `monitors[0]` = the full “virtual desktop”
-- `monitors[1]` = primary monitor
-- `monitors[2]` = secondary monitor
-- etc.
+1. `config.json -> files.points_file` (default: `points.json`)
+2. `points-<WIDTH>x<HEIGHT>.json` (example: `points-1920x1080.json`)
+3. If current resolution is **1920x1080** only: `points-1920x1080.json`
 
-You can print them:
+If none exists (or the file is invalid), the script will print an error telling you to record points and to check this README.
+
+---
+
+## Monitor index (MSS)
+
+MSS exposes monitors like:
+
+- `monitors[0]` = full virtual desktop
+- `monitors[1]` = primary
+- `monitors[2]` = secondary
+- ...
+
+Print them:
 
 ```bash
 python -c "from mss import mss; s=mss(); print(s.monitors)"
 ```
 
-Then set `config.json -> monitor.index` accordingly.
-
----
-
-## How detection works
-
-For each saved point:
-
-1. The script extracts a square ROI (`detection.color_box`) centered on the point.
-2. It checks two target colors (`color_1` and `color_2`, **RGB in config**, converted to BGR internally).
-3. It requires:
-   - enough pixels close to each color (`color_min_count`)
-   - those pixels are not all clumped together (`color_min_sep`)
-   - the ratio between color2 and color1 pixels is within `[color_ratio_min, color_ratio_max]`
-4. If a point “hits”, it’s highlighted in the debug window and can be clicked when you press `P`.
+Then set `config.json -> monitor.index`.
 
 ---
 
 ## Troubleshooting
 
-### DPI / scaling issues (coordinates don’t match)
-Windows scaling (125%, 150%, etc.) can desync pixel coordinates.
+### Coordinates don’t match (DPI / scaling)
+Windows scaling (125%, 150%, etc.) can desync screen coordinates.
 This repo calls `SetProcessDPIAware()`, but if you still see drift:
 
-- Temporarily set Windows Display Scale to **100%**
-- Ensure the game/app runs on the same monitor you configured (`monitor.index`)
-- Re-capture `points.json` after changing scaling
-
-### `config.json` parsing errors
-If you copied the config by hand:
-- Remove trailing commas (JSON does **not** allow them)
-- Make sure strings use double quotes `"`
+- Set Windows Display Scale to **100%**
+- Ensure the game/app is on the same monitor configured in `monitor.index`
+- Re-capture `points.json`
 
 ### `q` doesn’t quit
-`q` is handled via `cv2.waitKey()` only when the debug window is enabled.
-If `debug.show_window` is `false`, use **Ctrl+C** in the terminal.
+`q` uses `cv2.waitKey()` and only works if the debug window is enabled (`debug.show_window: true`).
+If disabled, exit with **Ctrl+C**.
+
+### Templates matching wrong place
+If the icon has a lot of white/flat regions, template matching can lock onto large bright areas.
+Fixes that help:
+- Add a **dark background** behind the button/icon (recommended)
+- Use higher thresholds (`automation.thr_put`, `thr_start`, `thr_collect`) if configured
+- Ensure templates are cropped tightly (no extra transparent margin)
 
 ---
 

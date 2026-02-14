@@ -2,7 +2,7 @@
   "monitor": {
     "index": 1,
     "comment": "Monitor index in mss: 1 = primary, 2 = secondary, etc.",
-    "width": 1920, 
+    "width": 1920,
     "height": 1080
   },
   "debug": {
@@ -25,12 +25,42 @@
   },
   "click": {
     "trigger_key": "P",
-    "delay": 0.05,
-    "jitter": 0.03,
+    "delay": 0.03,
+    "jitter": 0.0,
     "comment": "delay: base in seconds, jitter: random +/- in seconds"
   },
   "files": {
     "points_file": "points.json",
-    "comment": "File containing the detection points"
-  }
+    "comment": "File containing the detection points",
+    "images_dir": "images"
+  },
+  "automation": {
+    "start_key": "F7",
+    "cancel_key": "F8",
+
+    "state_pause_range": [1.0, 1.5],
+    "p_interval_range": [0.9, 1.3],
+    "p_duration_seconds": 20,
+    "state_timeout_seconds": 5,
+
+    "mask_mode": "auto",
+    "white_cutoff": 255,
+
+    "thr_put": 0.75,
+    "thr_start": 0.75,
+    "thr_collect": 0.75,
+
+    "click_retries": 3,
+    "verify_delay_range": [0.12, 0.22],
+    "icon_cooldown": 0.45,
+
+    "bright_thr": 215,
+    "dark_thr": 80,
+    "bright_tol": 0.18,
+    "dark_tol": 0.18,
+    "bg_border": 4,
+    "bg_max_mean": 70,
+    "topk_tries": 6
+  },
+  
 }
