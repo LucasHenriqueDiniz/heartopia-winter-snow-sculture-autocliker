@@ -22,11 +22,11 @@ GitHub READMEs don’t reliably render MP4 inline like images, so the usual patt
 - clicking it opens the **.mp4**
 
 ### 1) Tutorial — how to capture points
-[![Capture points tutorial](media/preview_example.png)](media/save_points.mp4)  
+[![Capture points tutorial](media/capture_preview.png)](media/save_points.mp4)  
 Direct link: `media/save_points.mp4`
 
 ### 2) Running — automation loop in action
-[![Running demo](media/preview_example.png)](media/running.mp4)  
+[![Running demo](media/running_preview.png)](media/running.mp4)  
 Direct link: `media/running.mp4`
 
 ### 3) Preview example (what the points overlay looks like)
