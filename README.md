@@ -1,41 +1,34 @@
 ![heartopia-winter-snow-sculture-autocliker](https://socialify.git.ci/LucasHenriqueDiniz/heartopia-winter-snow-sculture-autocliker/image?language=1&name=1&owner=1&pattern=Circuit+Board&theme=Light)
 
-# Auto Snow Loop (Windows) — Template Click + ROI Routine
+# Heartopia Winter Snow Sculpture — Auto Clicker (Windows)
 
-Two scripts, zero fluff:
+Two scripts:
 
-1) **`capture_points.py`** — capture the center points of the LEFT-side slots and auto-generate RIGHT-side points (mirrored). Writes `points.json` + `points_preview.png`.
-2) **`auto_snow_loop.py`** — main automation loop:
-   - finds UI buttons via **template matching** (PNG icons in `images/`)
-   - runs a **color ROI routine** over captured points during the **P_RUN** phase
-   - clicks through a small state machine (“cascade”) repeatedly
+1) **`capture_points.py`** — capture slot center points on the **LEFT side**, mirror to generate the **RIGHT side**, and save:
+   - `points.json`
+   - `points_preview.png` (frozen screenshot + numbered markers)
+2) **`auto_snow_loop.py`** — main loop:
+   - detects UI buttons via **template matching** (`images/*.png`)
+   - runs a **color ROI routine** over captured points during **P_RUN**
+   - advances through a small state machine (“cascade”) and repeats
 
 > ⚠️ Disclaimer: Use responsibly. Provided as-is.  
 > Windows is required due to DPI handling and `SendInput` (mouse injection).
 
 ---
 
-## Demo (videos)
+## Demos (YouTube)
 
-GitHub READMEs don’t reliably render MP4 inline like images, so the usual pattern is:
-- show a **thumbnail image**
-- clicking it opens the **.mp4**
+GitHub doesn’t reliably preview `.mp4` in-repo. YouTube solves that cleanly.
 
-### 1) Tutorial — how to capture points
-[![Capture points tutorial](media/capture_preview.png)](media/save_points.mp4)  
-Direct link: `media/save_points.mp4`
+### Capture points tutorial
+[![Capture points tutorial](https://img.youtube.com/vi/OLXRZFZll10/hqdefault.jpg)](https://www.youtube.com/watch?v=OLXRZFZll10)
 
-### 2) Running — automation loop in action
-[![Running demo](media/running_preview.png)](media/running.mp4)  
-Direct link: `media/running.mp4`
+### Running demo
+[![Running demo](https://img.youtube.com/vi/aTxlU8CyFwo/hqdefault.jpg)](https://www.youtube.com/watch?v=aTxlU8CyFwo)
 
-### 3) Preview example (what the points overlay looks like)
+### Points preview (example)
 ![Points preview example](media/preview_example.png)
-
-> Tip: If you want different thumbnails for each video, add:
-> - `media/save_points_thumb.png`
-> - `media/running_thumb.png`
-> …and replace the `preview_example.png` above.
 
 ---
 
@@ -51,15 +44,13 @@ Direct link: `media/running.mp4`
 │  ├─ start-snow.png
 │  └─ collect-sculture.png
 └─ media/
-   ├─ save_points.mp4
-   ├─ running.mp4
    └─ preview_example.png
 ```
 
-Generated at runtime (not required in git):
+Generated at runtime (optional to commit):
 - `points.json`
 - `points_preview.png`
-- optionally `points-1920x1080.json` or `points-<WxH>.json`
+- `points-1920x1080.json` or `points-<WxH>.json` (fallback presets)
 
 ---
 
@@ -78,8 +69,6 @@ Install:
 pip install numpy opencv-python mss
 ```
 
-(or keep a `requirements.txt` if you prefer)
-
 ---
 
 ## Quickstart
@@ -95,16 +84,8 @@ Example:
 
 ```json
 {
-  "monitor": {
-    "index": 1,
-    "width": 1920,
-    "height": 1080
-  },
-  "debug": {
-    "show_window": true,
-    "window_monitor_index": 2,
-    "show_scores": true
-  },
+  "monitor": { "index": 1, "width": 1920, "height": 1080 },
+  "debug": { "show_window": true, "window_monitor_index": 2, "show_scores": true },
   "detection": {
     "scan_interval": 0.05,
     "color_box": 70,
@@ -116,14 +97,8 @@ Example:
     "color_1": [255, 252, 255],
     "color_2": [74, 203, 242]
   },
-  "click": {
-    "delay": 0.03,
-    "jitter": 0.0
-  },
-  "files": {
-    "points_file": "points.json",
-    "images_dir": "images"
-  },
+  "click": { "delay": 0.03, "jitter": 0.0 },
+  "files": { "points_file": "points.json", "images_dir": "images" },
   "automation": {
     "start_key": "F7",
     "cancel_key": "F8",
@@ -149,11 +124,11 @@ python capture_points.py
 
 Workflow:
 - Press the **Start** hotkey.
-- You have ~20 seconds to capture points (LEFT side only).
+- You have ~20 seconds to capture points (**LEFT side only**).
 - The script mirrors them into RIGHT side points automatically.
 - It writes:
   - `points.json`
-  - `points_preview.png` (a frozen screenshot with numbered markers)
+  - `points_preview.png` (frozen screenshot with numbered markers)
 
 If you change monitor / resolution / Windows scaling, re-capture points.
 
@@ -177,18 +152,18 @@ Controls:
 
 ## Cascades (state machine)
 
-The loop is a simple cascade of states:
+State flow:
 
-1) **PUT** → click `put-snow.png`
-2) **START** → click `start-snow.png`
-3) **P_RUN** → run ROI routine for ~`p_duration_seconds`
-4) **COLLECT** → click `collect-sculture.png`
-5) **CENTER** → click the center of the monitor
+1) **PUT** → click `put-snow.png`  
+2) **START** → click `start-snow.png`  
+3) **P_RUN** → run ROI routine for ~`p_duration_seconds`  
+4) **COLLECT** → click `collect-sculture.png`  
+5) **CENTER** → click the monitor center  
 6) repeat
 
 Timeout behavior:
 - If the script stays **> `state_timeout_seconds`** in any state except `P_RUN`, it **skips to the next state**.
-- Cancel key stops immediately (even during `P_RUN`).
+- Cancel stops immediately (even during `P_RUN`).
 
 ```mermaid
 flowchart LR
@@ -203,62 +178,37 @@ flowchart LR
 
 ## Points fallback behavior (important)
 
-`auto_snow_loop.py` tries points in this order:
+If `files.points_file` is missing/invalid, `auto_snow_loop.py` tries:
 
-1. `config.json -> files.points_file` (default: `points.json`)
-2. `points-<WIDTH>x<HEIGHT>.json` (example: `points-2560x1440.json`)
-3. **Only if current resolution is 1920x1080**: `points-1920x1080.json`
+1. `points-<WIDTH>x<HEIGHT>.json` (example: `points-2560x1440.json`)
+2. **Only if current resolution is 1920x1080**: `points-1920x1080.json`
 
-If none exists (or the file is invalid), it exits with a message telling you to record points and check this README.
-
----
-
-## Monitor index (MSS)
-
-MSS exposes monitors like:
-
-- `monitors[0]` = full virtual desktop
-- `monitors[1]` = primary monitor
-- `monitors[2]` = secondary monitor
-- ...
-
-Print them:
-
-```bash
-python -c "from mss import mss; s=mss(); print(s.monitors)"
-```
-
-Then set `config.json -> monitor.index`.
+If nothing matches, it exits with an error telling you to record points (see “Capture points” above).
 
 ---
 
 ## FAQ / Troubleshooting
 
-### Why MP4 doesn’t show inline in README?
-GitHub sanitizes/limits HTML in Markdown and MP4 embedding is inconsistent.
-Use a clickable thumbnail instead:
-```md
-[![title](media/thumb.png)](media/video.mp4)
-```
+### GitHub says “Sorry… can’t show files that are this big right now”
+That’s GitHub’s file preview limitation. Host the demo on YouTube (as done above) and keep only thumbnails in the repo.
 
 ### My clicks are slightly off (DPI / scaling)
 - Set Windows Display Scale to **100%**
-- Make sure the app is on the correct monitor (`monitor.index`)
+- Ensure the app is on the configured monitor (`monitor.index`)
 - Re-capture points after any scaling/resolution change
 
 ### Template matching clicks the wrong place
 Common causes:
-- The icon is mostly flat/white (it matches huge bright regions)
-- The template PNG has too much transparent padding
+- icon is too flat/white and matches large bright regions
+- template PNG has too much padding
 
 Fixes:
-- Add a **dark background** behind the UI buttons (best fix)
-- Crop templates tighter (remove empty margins)
-- Raise thresholds (`thr_put`, `thr_start`, `thr_collect`) if you expose them in config
+- add a **dark background** behind UI buttons (best fix)
+- crop templates tighter (remove empty margins)
+- raise thresholds (`thr_put`, `thr_start`, `thr_collect`) if you expose them in config
 
 ### `q` doesn’t quit
-`q` is only handled when the debug window is open (`debug.show_window: true`).
-Otherwise: use **Ctrl+C**.
+`q` is only handled when the debug window is open (`debug.show_window: true`). Otherwise use **Ctrl+C**.
 
 ---
 
