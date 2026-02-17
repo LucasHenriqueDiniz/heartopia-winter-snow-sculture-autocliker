@@ -66,7 +66,7 @@ Generated at runtime (optional to commit):
 Install:
 
 ```bash
-pip install numpy opencv-python mss
+pip install -r requirements.txt
 ```
 
 ---
