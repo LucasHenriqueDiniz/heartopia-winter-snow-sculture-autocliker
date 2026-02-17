@@ -19,8 +19,6 @@ Two scripts:
 
 ## Demos (YouTube)
 
-GitHub doesn’t reliably preview `.mp4` in-repo. YouTube solves that cleanly.
-
 ### Capture points tutorial
 [![Capture points tutorial](https://img.youtube.com/vi/OLXRZFZll10/hqdefault.jpg)](https://www.youtube.com/watch?v=OLXRZFZll10)
 
