@@ -61,6 +61,5 @@
     "bg_border": 4,
     "bg_max_mean": 70,
     "topk_tries": 6
-  },
-  
+  }  
 }
