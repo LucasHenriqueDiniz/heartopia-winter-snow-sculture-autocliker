@@ -188,10 +188,6 @@ If nothing matches, it exits with an error telling you to record points (see “
 ---
 
 ## FAQ / Troubleshooting
-
-### GitHub says “Sorry… can’t show files that are this big right now”
-That’s GitHub’s file preview limitation. Host the demo on YouTube (as done above) and keep only thumbnails in the repo.
-
 ### My clicks are slightly off (DPI / scaling)
 - Set Windows Display Scale to **100%**
 - Ensure the app is on the configured monitor (`monitor.index`)
