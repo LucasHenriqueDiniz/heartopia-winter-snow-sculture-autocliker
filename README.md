@@ -19,8 +19,6 @@ Two scripts:
 
 ## Demos (YouTube)
 
-GitHub doesn’t reliably preview `.mp4` in-repo. YouTube solves that cleanly.
-
 ### Capture points tutorial
 [![Capture points tutorial](https://img.youtube.com/vi/OLXRZFZll10/hqdefault.jpg)](https://www.youtube.com/watch?v=OLXRZFZll10)
 
@@ -66,7 +64,7 @@ Generated at runtime (optional to commit):
 Install:
 
 ```bash
-pip install numpy opencv-python mss
+pip install -r requirements.txt
 ```
 
 ---
@@ -188,10 +186,6 @@ If nothing matches, it exits with an error telling you to record points (see “
 ---
 
 ## FAQ / Troubleshooting
-
-### GitHub says “Sorry… can’t show files that are this big right now”
-That’s GitHub’s file preview limitation. Host the demo on YouTube (as done above) and keep only thumbnails in the repo.
-
 ### My clicks are slightly off (DPI / scaling)
 - Set Windows Display Scale to **100%**
 - Ensure the app is on the configured monitor (`monitor.index`)
